@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '../components/HomePage.vue';
+import LoginRegisterModel from '../components/LoginRegisterModel.vue';
 import PostDetail from '../components/PostDetail.vue';
 import SearchPage from '../components/SearchPage.vue';
 import NotificationsList from '../components/NotificationsList.vue';
@@ -7,6 +8,7 @@ import UserProfile from '../components/UserProfile.vue';
 
 const routes = [
   { path: '/', component: HomePage },
+  { path: '/login', component: LoginRegisterModel },
   { path: '/post/:postId', component: PostDetail },
   { path: '/search', component: SearchPage },
   { path: '/notifications', component: NotificationsList },
