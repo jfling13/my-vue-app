@@ -28,26 +28,39 @@
     <div v-else class="no-comments">
         写点什么吧~
     </div>
-</div>
-
-  
+ </div>
+ 
       <!-- 添加评论表单 (示例) -->
       <form @submit.prevent="submitComment">
-        <textarea v-model="newCommentText"></textarea>
+        <textarea v-model="newCommentText" name="commentText"></textarea>
         <button type="submit">提交评论</button>
       </form>
+
+      <LoginRegisterModel 
+      :show="showLoginRegisterbox" 
+      @update:show="showLoginRegisterbox = $event" 
+      @userLoggedIn="handleUserLoggedIn"
+    ></LoginRegisterModel>
+
     </div>
+
+
   </template>
   
   <script>
   import axios from 'axios';
-  
+  import LoginRegisterModel from './LoginRegisterModel.vue';
   export default {
+    components: {
+        LoginRegisterModel
+  },
     data() {
       return {
         post: {},
         comments: [],
-        newCommentText: ''
+        newCommentText: '',
+        user: null, // 假设null表示未登录
+        showLoginRegisterbox: false
       };
     },
     created() {
@@ -60,21 +73,30 @@
       axios.get(`http://127.0.0.1:8000/api/comment/${postId}`)
         .then(response => {
           this.comments = response.data;
-          console.log(this.comments);
 
         });
     },
     methods: {
       submitComment() {
+        if(!this.user){
+            this.showLoginRegisterbox=true; // 显示登录/注册模态框
+            return;
+        }
         const postId = this.$route.params.postId;
         axios.post(`http://127.0.0.1:8000/api/add_comment/${postId}`, {
-          text: this.newCommentText
+          text: this.newCommentText,
+          user:this.user,
+        //   parent:this.parent,
         })
         .then(response => {
           this.comments.push(response.data);
           this.newCommentText = ''; // 清空评论文本
         });
-      }
+      },
+      handleUserLoggedIn(user) {
+      this.user = user;
+      this.showLoginRegisterbox = false;
+    }
     }
   }
   </script>
@@ -200,4 +222,23 @@ button[type="submit"] {
 button[type="submit"]:hover {
     background-color: #005f5f;
 }
+.login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-content {
+  background: #fff;
+  padding: 20px;
+  width: 300px;
+  border-radius: 10px;
+}
+
 </style>
