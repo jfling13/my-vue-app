@@ -11,6 +11,7 @@
     <!-- 评论列表 -->
     <div class="comments-list">
     <template v-if="comments.length > 0">
+      <div>
     <div  v-for="comment in comments" :key="comment.id" class="comment">
         <div class="comment-header">
             <img :src="comment.author_avatar" alt="User Avatar" class="commenter-avatar">
@@ -19,9 +20,11 @@
         </div>
         <p class="comment-content">{{ comment.content }}</p>
         <div class="comment-actions">
-            <button class="comment-button">回复</button>
+            <button class="comment-button" @click="startReply(comment.id)">回复</button>
             <button class="comment-button">点赞</button>
         </div>
+    </div>
+    <button v-if="hasMore" @click="loadMore">加载更多</button>
     </div>
     </template>
     <!-- 显示提示信息当没有评论时 -->
@@ -32,13 +35,14 @@
  
       <!-- 添加评论表单 (示例) -->
       <form @submit.prevent="submitComment">
-        <textarea v-model="newCommentText" name="commentText"></textarea>
+        <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+        <textarea v-model="newCommentText" name="commentText" :placeholder="replyingTo ? '回复 ' + replyingTo.post.author_name : '添加评论'" ref="commentInput"></textarea>
         <button type="submit">提交评论</button>
       </form>
 
       <LoginRegisterModel 
-      :show="showLoginRegisterbox" 
-      @update:show="showLoginRegisterbox = $event" 
+      :show="showLoginModel" 
+      @update:show="showLoginModel = $event" 
       @userLoggedIn="handleUserLoggedIn"
     ></LoginRegisterModel>
 
@@ -58,9 +62,14 @@
       return {
         post: {},
         comments: [],
+        hasMore: true,
+        currentPage: 1,
+        parentCommentId: null,
         newCommentText: '',
+        errorMessage:'',
         user: null, // 假设null表示未登录
-        showLoginRegisterbox: false
+        showLoginModel: false,
+        replyingTo: null,  // 保存我们正在回复的评论的数据
       };
     },
     created() {
@@ -72,33 +81,92 @@
       
       axios.get(`http://127.0.0.1:8000/api/comment/${postId}`)
         .then(response => {
-          this.comments = response.data;
+          this.comments = response.data.comments;
 
         });
     },
     methods: {
       submitComment() {
+        if(!this.newCommentText){
+          this.errorMessage = "还没有填写任何评论哦~";
+          return;
+        }
         if(!this.user){
-            this.showLoginRegisterbox=true; // 显示登录/注册模态框
+            this.showLoginModel=true; // 显示登录/注册模态框
             return;
         }
+        this.addComment();
+      },
+      startReply(comment) {
+        this.parentCommentId = comment.id;
+        this.replyingTo = comment;
+        // 将输入框的焦点设置到评论文本上，使用户可以立即开始输入（这需要一个ref属性在文本框上）
+        this.$refs.commentInput.focus();
+      },
+
+      addComment() {
         const postId = this.$route.params.postId;
         axios.post(`http://127.0.0.1:8000/api/add_comment/${postId}`, {
           text: this.newCommentText,
-          user:this.user,
-        //   parent:this.parent,
+          user: this.user.id,
+          parent: this.parentCommentId, //如果是空是对正文评论，如果非空则是对评论的评论
         })
         .then(response => {
-          this.comments.push(response.data);
-          this.newCommentText = ''; // 清空评论文本
+          if (response.data.success) {
+            const newComment = {
+              author:response.data.response_data.author,
+              author_avatar: response.data.response_data.author_avatar,
+              author_name: response.data.response_data.author_name,
+              content: response.data.response_data.content,
+              created_at: response.data.response_data.created_at,
+              id: response.data.response_data.id,
+              parent: response.data.response_data.parent,
+              post : response.data.response_data.post,
+            };
+            // this.comments = [...this.comments, newComment];
+            this.comments.unshift(newComment);
+
+            this.newCommentText = ''; // 清空评论文本
+            this.parentCommentId = null;
+            this.replyingTo = null;  // 重置回复状态
+          } else {
+            // 显示错误消息
+            this.errorMessage = response.data.error;
+          }
         });
       },
-      handleUserLoggedIn(user) {
+      loadMore() {
+          this.loadMoreComments();
+        },
+      loadMoreComments() {
+          const postId = this.$route.params.postId;
+          axios.get(`http://127.0.0.1:8000/api/comment/${postId}?page=${this.currentPage + 1}`)
+          .then(response => {
+            if (response.data.comments.length) {
+              this.comments.push(...response.data.comments);
+              this.currentPage += 1;
+            }
+            if (!response.data.has_more) {
+              this.hasMore = false;
+            }
+          })
+          .catch(error => {
+            // 你可以在这里处理错误，例如显示一个错误消息
+            console.error('Error loading more comments:', error);
+          });
+        },     
+
+      handleUserLoggedIn(user){
       this.user = user;
-      this.showLoginRegisterbox = false;
+      this.showLoginModel = false;
+      if(this.newCommentText) {
+        this.addComment();
+      }
     }
+       
+      },
+      
     }
-  }
   </script>
   
   <style scoped>
@@ -239,6 +307,10 @@ button[type="submit"]:hover {
   padding: 20px;
   width: 300px;
   border-radius: 10px;
+}
+.error-message {
+  color: red;
+  font-size: 13px;
 }
 
 </style>
