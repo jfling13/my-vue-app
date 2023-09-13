@@ -3,13 +3,14 @@
     <div class="login-content" @click.stop>
       <div v-if="activeTab === 'login'">
         <h3>登录</h3>
-        <input v-model="loginData.username" placeholder="用户名">
-        <input type="password" v-model="loginData.password" placeholder="密码">
-        <input v-model="loginData.captcha" placeholder="验证码">
+        <div v-if="errorMessages && errorMessages.length" class="error-message"> * {{ errorMessages }}</div>
+        <input v-model="loginData.username" @input="clearErrors" placeholder="用户名">
+        <input type="password" v-model="loginData.password" @input="clearErrors" placeholder="密码">
+        <input v-model="loginData.captcha" @input="clearErrors" placeholder="验证码">
         <!-- 在登录部分 -->
         <div class="button-group">
         <button @click="handleLogin">登录</button>
-        <button @click="switchTab('register')">去注册</button>
+        <button @click="switchTab('register')">注册</button>
         </div>
       </div>
       
@@ -22,7 +23,7 @@
         <!-- 在注册部分 -->
         <div class="button-group">
         <button @click="handleRegister">注册</button>
-        <button @click="switchTab('login')">去登录</button>
+        <button @click="switchTab('login')">登录</button>
         </div>
       </div>
 
@@ -49,7 +50,8 @@ export default {
         password: '',
         confirmPassword: '',
         captcha: ''
-      }
+      },
+      errorMessages: '',
     };
   },
   computed: {
@@ -65,15 +67,30 @@ export default {
       this.$emit('update:show', false);
     },
     handleLogin() {
-      axios.post('http://127.0.0.1:8000/api/login', this.loginData)
+      this.clearErrors();
+      if(!this.loginData.username){
+        this.errorMessages = '必须填写用户名';return
+      }
+
+      if(!this.loginData.password || this.loginData.password.length < 8) {
+        this.errorMessages = '密码不应小于8位数';return
+      }
+
+      if(!this.loginData.captcha || this.loginData.captcha.length < 5){
+        this.errorMessages = '验证码不应小于5位数';return
+      }
+
+      axios.post('http://127.0.0.1:8000/api/login/', this.loginData)
         .then(response => {
           if (response.data.success) {
             // 登录成功，你可以关闭模态框并更新用户的状态
             this.closeModel();
             this.$emit('userLoggedIn', response.data.user);
+
           } else {
             // 显示错误消息
-            alert(response.data.message);
+            this.errorMessages = response.data.error;
+                
           }
         });
     },
@@ -88,7 +105,11 @@ export default {
             alert(response.data.message);
           }
         });
-    }
+    },
+    clearErrors(){
+       this.errorMessages = '';
+   },
+  
   }
 }
 </script>
@@ -156,5 +177,9 @@ export default {
     display: flex;
     justify-content: space-between;  
     gap: 10px;  
+}
+.error-message{
+  color: red;
+  font-weight: bold;
 }
 </style>
