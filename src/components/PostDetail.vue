@@ -24,7 +24,9 @@
             <button class="comment-button">点赞</button>
         </div>
     </div>
-    <button v-if="hasMore" @click="loadMore">加载更多</button>
+      <div v-if="hasMore">
+    <button @click="loadMore">加载更多</button>
+  </div>
     </div>
     </template>
     <!-- 显示提示信息当没有评论时 -->
@@ -82,6 +84,7 @@
       axios.get(`http://127.0.0.1:8000/api/comment/${postId}`)
         .then(response => {
           this.comments = response.data.comments;
+          this.hasMore = response.data.has_more;
 
         });
     },
@@ -124,7 +127,7 @@
               post : response.data.response_data.post,
             };
             // this.comments = [...this.comments, newComment];
-            this.comments.unshift(newComment);
+            this.comments.push(newComment);
 
             this.newCommentText = ''; // 清空评论文本
             this.parentCommentId = null;
