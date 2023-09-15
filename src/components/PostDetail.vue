@@ -1,10 +1,11 @@
 <template>
-    <div class="post-detail">
+  <div >
+    <div class="post-detail" @click="like">
       <h1>{{ post.title }}</h1>
       <p class="post-author">{{ post.author_name }}</p>
       <img :src="post.mask_url" alt="Post Mask Image"  class="post-image"/>
       <div v-html="post.content"></div>
-  
+    </div>
       <!-- 评论区标题 -->
       <h4 class="comments-title">看看大家都在说什么：</h4>
 
@@ -272,7 +273,7 @@ form {
 }
 
 textarea {
-    width: 100%;
+    width: 98%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;

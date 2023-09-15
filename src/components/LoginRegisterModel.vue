@@ -6,6 +6,7 @@
         <div v-if="errorMessages && errorMessages.length" class="error-message"> * {{ errorMessages }}</div>
         <input v-model="loginData.username" @input="clearErrors" placeholder="用户名">
         <input type="password" v-model="loginData.password" @input="clearErrors" placeholder="密码">
+        <div class="g-recaptcha" ></div>
         <input v-model="loginData.captcha" @input="clearErrors" placeholder="验证码">
         <!-- 在登录部分 -->
         <div class="button-group">
@@ -19,6 +20,7 @@
         <input v-model="registerData.email" placeholder="邮箱">
         <input type="password" v-model="registerData.password" placeholder="密码">
         <input type="password" v-model="registerData.confirmPassword" placeholder="确认密码">
+        <div class="g-recaptcha" ></div>
         <input v-model="registerData.captcha" placeholder="验证码">
         <!-- 在注册部分 -->
         <div class="button-group">
@@ -34,11 +36,11 @@
 
 <script>
 import axios from 'axios';
-
 export default {
   props: ['show'],
   data() {
     return {
+      sitekey:"6LdbwiooAAAAACVs0W8USDZtTdDBOqDcFqThtxZZ",
       activeTab: 'login',
       loginData: {
         username: '',
@@ -53,6 +55,7 @@ export default {
       },
       errorMessages: '',
     };
+    
   },
   computed: {
     showLoginModel() {
@@ -60,6 +63,13 @@ export default {
     }
   },
   methods: {
+    onVerify(isHuman) {
+      if (isHuman) {
+        // 用户通过了验证码验证
+      } else {
+        // 验证失败，可以选择重新加载验证码或提示用户
+      }
+    },
     switchTab(tabName) {
       this.activeTab = tabName;
     },
@@ -146,7 +156,7 @@ export default {
 }
 
 .login-content input {
-    width: 100%;
+    width: 95%;
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #ddd;

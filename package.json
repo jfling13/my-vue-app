@@ -16,6 +16,7 @@
     "core-js": "^3.8.3",
     "font-awesome": "^4.7.0",
     "vue": "^3.2.13",
+    "vue-captcha": "^1.0.2",
     "vue-lazyload": "^3.0.0",
     "vue-router": "^4.2.4"
   },
