@@ -13,5 +13,6 @@ app.use(VueLazyload, {
     attempt: 1
 });
 
+
 app.use(router);
 app.mount('#app');

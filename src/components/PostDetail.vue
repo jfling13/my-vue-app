@@ -127,7 +127,6 @@
               parent: response.data.response_data.parent,
               post : response.data.response_data.post,
             };
-            // this.comments = [...this.comments, newComment];
             this.comments.push(newComment);
 
             this.newCommentText = ''; // 清空评论文本
