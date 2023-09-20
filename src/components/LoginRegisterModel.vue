@@ -4,10 +4,12 @@
       <div v-if="activeTab === 'login'">
         <h3>登录</h3>
         <div v-if="errorMessages && errorMessages.length" class="error-message"> * {{ errorMessages }}</div>
-        <input v-model="loginData.username" @input="clearErrors" placeholder="用户名">
-        <input type="password" v-model="loginData.password" @input="clearErrors" placeholder="密码">
-        <div class="g-recaptcha" ></div>
-        <input v-model="loginData.captcha" @input="clearErrors" placeholder="验证码">
+        <input v-model="loginData.username" @input="clearErrors" placeholder="用户名" name="username">
+        <input type="password" v-model="loginData.password" @input="clearErrors" placeholder="密码" name="password">
+        <div class="recaptcha-container">
+         <span>请进行验证：</span>
+         <div class="g-recaptcha" :data-sitekey='sitekey' ></div>
+        </div>
         <!-- 在登录部分 -->
         <div class="button-group">
         <button @click="handleLogin">登录</button>
@@ -17,67 +19,102 @@
       
       <div v-if="activeTab === 'register'">
         <h3>注册</h3>
-        <input v-model="registerData.email" placeholder="邮箱">
-        <input type="password" v-model="registerData.password" placeholder="密码">
-        <input type="password" v-model="registerData.confirmPassword" placeholder="确认密码">
-        <div class="g-recaptcha" ></div>
-        <input v-model="registerData.captcha" placeholder="验证码">
+        <input v-model="registerData.username" placeholder="用户名" name="username">
+        <input v-model="registerData.email" placeholder="邮箱" name="email">
+        <input type="password" v-model="registerData.password" placeholder="密码" name="password">
+        <input type="password" v-model="registerData.confirmPassword" placeholder="确认密码" name="repassword">
+        <div class="recaptcha-container">
+         <span>请进行验证：</span>
+         <div class="g-recaptcha" :data-sitekey='sitekey' ></div>
+        </div>
         <!-- 在注册部分 -->
         <div class="button-group">
-        <button @click="handleRegister">注册</button>
         <button @click="switchTab('login')">登录</button>
+        <button @click="handleRegister">注册</button>
         </div>
       </div>
-
-      <!-- <button @click="closeModel">关闭</button> -->
     </div>
   </div>
 </template>
 
 <script>
+/* eslint-disable no-undef */
+
 import axios from 'axios';
+
 export default {
+  mounted() {
+    this.$nextTick(() => {
+        const script = document.createElement('script');
+        script.src = "https://www.google.com/recaptcha/api.js";
+        document.body.appendChild(script);
+    });
+},
   props: ['show'],
   data() {
     return {
-      sitekey:"6LdbwiooAAAAACVs0W8USDZtTdDBOqDcFqThtxZZ",
+      sitekey:"6LfDfTooAAAAAOeO7TKdF8Eb0Ucq_P5vReFpdwxP",
       activeTab: 'login',
       loginData: {
         username: '',
         password: '',
-        captcha: ''
+        captchaResponse: '',
+        captchaValue:'',
       },
       registerData: {
         email: '',
         password: '',
         confirmPassword: '',
-        captcha: ''
+        captchaResponse: '',
+        captchaValue:'',
       },
       errorMessages: '',
     };
     
   },
+  watch: {
+  showLoginModel(newValue) {
+    if (newValue) {
+      this.$nextTick(() => {
+        if (window.grecaptcha && grecaptcha.render) {
+          grecaptcha.render(document.querySelector('.g-recaptcha'), {
+            sitekey: this.sitekey,
+            size: "normal",
+            theme: "light"
+          });
+        }
+      });
+    }
+  }
+},
   computed: {
     showLoginModel() {
       return this.show;
     }
   },
   methods: {
-    onVerify(isHuman) {
-      if (isHuman) {
-        // 用户通过了验证码验证
-      } else {
-        // 验证失败，可以选择重新加载验证码或提示用户
-      }
-    },
     switchTab(tabName) {
-      this.activeTab = tabName;
-    },
+    this.activeTab = tabName;
+    this.$nextTick(() => {
+        if (window.grecaptcha && grecaptcha.render) {
+            grecaptcha.render(document.querySelector('.g-recaptcha'), {
+                sitekey: this.sitekey,
+                size: "normal",
+                theme: "light"
+            });
+        }
+    });
+},
+    
     closeModel() {
       this.$emit('update:show', false);
     },
     handleLogin() {
       this.clearErrors();
+
+      this.captchaValue = document.querySelector('.g-recaptcha-response') ? document.querySelector('.g-recaptcha-response').value : null;
+
+
       if(!this.loginData.username){
         this.errorMessages = '必须填写用户名';return
       }
@@ -86,9 +123,12 @@ export default {
         this.errorMessages = '密码不应小于8位数';return
       }
 
-      if(!this.loginData.captcha || this.loginData.captcha.length < 5){
-        this.errorMessages = '验证码不应小于5位数';return
+      if (!this.captchaValue) {
+       this.errorMessages = "请完成验证码验证";
+        return;
       }
+
+      this.loginData.captchaResponse = this.captchaValue;
 
       axios.post('http://127.0.0.1:8000/api/login/', this.loginData)
         .then(response => {
@@ -100,11 +140,31 @@ export default {
           } else {
             // 显示错误消息
             this.errorMessages = response.data.error;
-                
+            console.log(this.errorMessages)
           }
         });
     },
     handleRegister() {
+      this.clearErrors();
+
+      this.captchaValue = document.querySelector('.g-recaptcha-response') ? document.querySelector('.g-recaptcha-response').value : null;
+
+
+      if(!this.registerData.username){
+        this.errorMessages = '必须填写用户名';return
+      }
+
+      if(!this.registerData.password || this.registerData.password.length < 8) {
+        this.errorMessages = '密码不应小于8位数';return
+      }
+
+      if (!this.captchaValue) {
+       this.errorMessages = "请完成验证码验证";
+        return;
+      }
+
+      this.registerData.captchaResponse = this.captchaValue;
+
       axios.post('http://127.0.0.1:8000/api/register', this.registerData)
         .then(response => {
           if (response.data.success) {
@@ -192,4 +252,28 @@ export default {
   color: red;
   font-weight: bold;
 }
+
+/* .g-recaptcha {
+        transform: scale(0.85);
+        transform-origin: 0 0;
+    }
+
+.recaptcha-container {
+    
+} */
+
+.recaptcha-container {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between; /* 确保元素之间有空隙 */
+    align-items: flex-start; /* 确保元素垂直居中 */
+}
+
+.g-recaptcha {
+        transform: scale(0.85);
+        transform-origin: 0 0;
+}
+
+
 </style>
