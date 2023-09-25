@@ -3,7 +3,7 @@ import App from './App.vue';
 import router from './router';
 import VueLazyload from 'vue-lazyload';
 import 'font-awesome/css/font-awesome.min.css';
-
+import store from './store';
 const app = createApp(App);
 
 app.use(VueLazyload, {
@@ -12,7 +12,6 @@ app.use(VueLazyload, {
     loading: '/images/path_to_loading_image.gif',
     attempt: 1
 });
-
-
+app.use(store);
 app.use(router);
 app.mount('#app');
