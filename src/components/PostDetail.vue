@@ -57,6 +57,8 @@
   <script>
   import axios from 'axios';
   import LoginRegisterModel from './LoginRegisterModel.vue';
+  import { mapState } from 'vuex';
+
   export default {
     components: {
         LoginRegisterModel
@@ -70,10 +72,13 @@
         parentCommentId: null,
         newCommentText: '',
         errorMessage:'',
-        user: null, // 假设null表示未登录
+        // user: null, // 假设null表示未登录
         showLoginModel: false,
         replyingTo: null,  // 保存我们正在回复的评论的数据
       };
+    },
+    computed: {
+      ...mapState(['user'])
     },
     created() {
       const postId = this.$route.params.postId;
@@ -95,10 +100,13 @@
           this.errorMessage = "还没有填写任何评论哦~";
           return;
         }
+
+        // this.user = localStorage.getItem('vuex.user');
         if(!this.user){
             this.showLoginModel=true; // 显示登录/注册模态框
             return;
         }
+        
         this.addComment();
       },
       startReply(comment) {
