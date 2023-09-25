@@ -41,6 +41,7 @@
 /* eslint-disable no-undef */
 
 import axios from 'axios';
+import { mapState,mapMutations } from 'vuex';
 
 export default {
   mounted() {
@@ -88,11 +89,13 @@ export default {
   }
 },
   computed: {
+    ...mapState(['user']),
     showLoginModel() {
       return this.show;
     }
   },
   methods: {
+    ...mapMutations(['SET_USER']),
     switchTab(tabName) {
     this.activeTab = tabName;
     this.$nextTick(() => {
@@ -109,7 +112,7 @@ export default {
     closeModel() {
       this.$emit('update:show', false);
     },
-    handleLogin() {
+    async handleLogin() {
       this.clearErrors();
 
       this.captchaValue = document.querySelector('.g-recaptcha-response') ? document.querySelector('.g-recaptcha-response').value : null;
@@ -129,11 +132,16 @@ export default {
       }
 
       this.loginData.captchaResponse = this.captchaValue;
-
-      axios.post('http://127.0.0.1:8000/api/login/', this.loginData)
+      
+      axios.post('http://127.0.0.1:8000/api/login/',this.loginData)
         .then(response => {
           if (response.data.success) {
+            const token = response.data.access_token; // 假设后端返回了一个叫做 'access' 的字段
+            // const refreshToken = response.data.refresh_token;
+            localStorage.setItem('user_token', token); // 保存 token
+            // localStorage.setItem('refresh_token', refreshToken);
             // 登录成功，你可以关闭模态框并更新用户的状态
+            this.SET_USER(response.data.user); // 使用vuex来设置用户信息
             this.closeModel();
             this.$emit('userLoggedIn', response.data.user);
 
@@ -142,6 +150,11 @@ export default {
             this.errorMessages = response.data.error;
             console.log(this.errorMessages)
           }
+        })
+        .catch(error => {
+          // 处理错误
+          this.errorMessages = '登录请求失败，请稍后再试';
+          console.error(error);
         });
     },
     handleRegister() {
