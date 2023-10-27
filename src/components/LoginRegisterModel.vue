@@ -54,7 +54,7 @@ export default {
   props: ['show'],
   data() {
     return {
-      sitekey:"6LfDfTooAAAAAOeO7TKdF8Eb0Ucq_P5vReFpdwxP",
+      sitekey:"6LdjBtEoAAAAAN3Z8CQHkXIdXCoG3Zh4IcbkmHiu",
       activeTab: 'login',
       loginData: {
         username: '',

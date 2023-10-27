@@ -1,6 +1,6 @@
 <template>
   <div >
-    <div class="post-detail" @click="like">
+    <div class="post-detail"  @dblclick="handleLike(post.id,0)">
       <h1>{{ post.title }}</h1>
       <p class="post-author">{{ post.author_name }}</p>
       <img :src="post.mask_url" alt="Post Mask Image"  class="post-image"/>
@@ -22,7 +22,7 @@
         <p class="comment-content">{{ comment.content }}</p>
         <div class="comment-actions">
             <button class="comment-button" @click="startReply(comment.id)">回复</button>
-            <button class="comment-button">点赞</button>
+            <button class="comment-button" :class="{ liked: isLiked }" @click="handleLike(post.id,comment.id)">{{likeButtonText}}</button>
         </div>
     </div>
       <div v-if="hasMore">
@@ -75,6 +75,8 @@
         // user: null, // 假设null表示未登录
         showLoginModel: false,
         replyingTo: null,  // 保存我们正在回复的评论的数据
+        isLiked: false, // 初始状态为未点赞
+        likeButtonText: "点赞", // 初始按钮文本
       };
     },
     computed: {
@@ -95,6 +97,30 @@
         });
     },
     methods: {
+      handleLike(postId,commentId) {
+      if (!this.user) {
+        // 如果用户未登录，显示登录框
+        this.showLoginModel = true;
+      } else {
+        // 如果用户已登录，进行点赞操作
+        if (commentId === undefined || commentId === null) {
+               commentId = 0; // 或者你可以设置一个默认值
+           }
+        axios.post(`http://127.0.0.1:8000/api/add_like/${postId}/${commentId}`, {
+          user: this.user.id,
+        })
+        .then(response => {
+          if (response.data.success) {
+              this.isLiked = true; // 设置为已点赞状态
+              this.likeButtonText = "已赞"; // 更新按钮文本
+          } else {
+            // 显示错误消息
+            this.errorMessage = response.data.error;
+          }
+        });
+      }
+    },
+    
       submitComment() {
         if(!this.newCommentText){
           this.errorMessage = "还没有填写任何评论哦~";
@@ -183,9 +209,9 @@
   <style scoped>
 /* 根据需要添加样式 */
 .post-detail {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+    /* max-width: 800px; */
+    margin: 30 auto;
+    padding: 30px;
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
@@ -200,7 +226,7 @@
 }
 
 .post-image {
-    width: 100%;
+    width: 85%;
     height: auto;
     border-radius: 10px;
     margin-bottom: 20px;
@@ -213,6 +239,9 @@
     padding-bottom: 10px;
 }
 
+.liked {
+  color: red; /* 如果已点赞，按钮文字变为红色 */
+}
 .comments-list {
     padding: 20px;
     background: #f9f9f9;

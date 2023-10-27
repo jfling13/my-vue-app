@@ -64,9 +64,10 @@ methods: {
   },
   
   checkScroll() {
-    const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100;
-    if (nearBottom) {
-      this.loadMore(); // 如果接近底部，加载更多数据
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const triggerPoint = document.documentElement.scrollHeight - (window.innerHeight * 0.2);
+    if (scrollPosition >= triggerPoint) {
+      this.loadMore();
     }
   }
 
@@ -78,10 +79,12 @@ methods: {
 <style scoped>
 .post-list {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  padding: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    flex-direction: row;
+    justify-content: space-around;
+  
 }
 
 .post-item {

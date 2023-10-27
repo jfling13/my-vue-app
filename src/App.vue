@@ -5,6 +5,7 @@
     <nav class="left-nav">
       <router-link to="/"><i class="fa fa-home"></i>Home</router-link>
       <router-link to="/search"><i class="fa fa-search"></i>Search</router-link>
+      <router-link to="/add"><i class="fa fa-plus"></i> Post</router-link>
       <router-link to="/notifications"><i class="fa fa-bell"></i>Notifications</router-link>
       <router-link to="/profile"><i class="fa fa-user"></i>Profile</router-link>
     </nav>
@@ -13,6 +14,7 @@
     <nav class="bottom-nav">
       <router-link to="/"><i class="fa fa-home"></i>Home</router-link>
       <router-link to="/search"><i class="fa fa-search"></i>Search</router-link>
+      <router-link to="/add"><i class="fa fa-plus"></i> Post</router-link>
       <router-link to="/notifications"><i class="fa fa-bell"></i>Notifications</router-link>
       <router-link to="/profile"><i class="fa fa-user"></i>Profile</router-link>
     </nav>
@@ -68,6 +70,13 @@ nav a:hover {
   right: 0;
   height: 60px;
 }
+
+.fa-plus {
+    /* color: #132231;   */
+    /* font-size: 18px;  */
+    text-shadow: 1px 1px 1px #555;
+}
+
 
 @media screen and (min-width: 768px) {
   .bottom-nav {
